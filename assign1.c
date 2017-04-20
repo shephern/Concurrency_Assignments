@@ -1,5 +1,39 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+
+struct args{
+        long tid;
+        long value;
+        long sleep_time;
+};
+
+void *consume(void *tid)
+{
+        struct args *a = (struct args*)tid;
+        sleep(a->sleep_time);
+        return (void*)printf("Hello from thread %ld!", a->tid);
+        /*
+         * TODO: consumer function
+         * * Consumes struct by removing it from the buffer
+         * * If the buffer is empty wait until producer adds
+         * * If accessing buffer, lock out other threads
+         * * Print value and sleep given time
+        */
+}
+
+void *produce(void *tid)
+{
+        /*
+         * Function to be created::
+         * * Produces struct and adds it to the buffer
+         * * If buffer is full wait until the consumer removes
+         * * If accessing the buffer, lock other threads out
+         * * Wait a random time (3-7 sec) before producing again
+        */
+}
 
 int main(int argc, char **argv)
 {
