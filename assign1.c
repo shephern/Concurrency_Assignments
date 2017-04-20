@@ -27,7 +27,7 @@ void *consume(void *tid)
 void *produce(void *tid)
 {
         /*
-         * Function to be created::
+         * TODO: producer function
          * * Produces struct and adds it to the buffer
          * * If buffer is full wait until the consumer removes
          * * If accessing the buffer, lock other threads out
