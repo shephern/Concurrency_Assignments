@@ -22,6 +22,9 @@ struct args{
         int *buf_size;
 };
 
+//Test please change
+int buffer_size=0;
+
 void *consume(void *passed_arg);
 void *produce(void *passed_arg);
 unsigned int get_random(int limit);
@@ -42,7 +45,7 @@ int main(int argc, char **argv)
         int num_thrd = num_prod + num_cons;
         struct item buffer[32];
         unsigned int buf_size = 0;
-
+        int print_counter = 0;
         pthread_t threads[num_thrd];
         struct args a[num_thrd];
 
@@ -76,7 +79,16 @@ int main(int argc, char **argv)
                                consume,
                                (void*)&a[i]);
         }
-        
+
+        //test please delete
+        while( 1 == 1){
+                if (buffer_size != print_counter) {
+                        pthread_mutex_lock(&print_mutex);
+                        printf("Size of buffer: %d", buffer_size);
+                        print_counter = buffer_size;
+                        pthread_mutex_unlock(&print_mutex);
+                }
+        }
         //Added a sleep because for whatever reason join quits before anything
         //can get done
         sleep(30);
@@ -110,13 +122,6 @@ void *consume(void *passed_arg)
         }
                 
         return NULL;
-        /*
-         * TODO: consumer function
-         * * Consumes struct by removing it from the buffer
-         * * If the buffer is empty wait until producer adds
-         * * If accessing buffer, lock out other threads
-         * * Print value and sleep given time
-        */
 }
 
 void *produce(void *passed_arg)
@@ -135,6 +140,8 @@ void *produce(void *passed_arg)
 
                 a->buffer[*(a->buf_size) - 1] = *tmp;
                 *(a->buf_size)++;
+                //Test please delete
+                buffer_size++;
 
                 pthread_mutex_lock(&print_mutex);
                 printf("Producer %d created %ld value item sleeping for %ld\n",                        a->tid, tmp->value, wait_time);
