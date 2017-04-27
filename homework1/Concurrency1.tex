@@ -1,0 +1,140 @@
+\documentclass[letterpaper,10pt,titlepage, onecolumn, compsoc]{IEEEtran}
+
+\usepackage{graphicx}                                        
+\usepackage{amssymb}                                         
+\usepackage{amsmath}                                         
+\usepackage{amsthm}                                          
+\usepackage{longtable}
+
+\usepackage{alltt}                                           
+\usepackage{float}
+\usepackage{color}
+\usepackage{url}
+
+\usepackage{balance}
+\usepackage[TABBOTCAP, tight]{subfigure}
+\usepackage{enumitem}
+\usepackage{pstricks, pst-node}
+
+\usepackage{geometry}
+\geometry{textheight=8.5in, textwidth=6in}
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\usepackage{hyperref}
+\usepackage{geometry}
+
+\title{Concurrency 1 \\The Producer-Consumer Problem \\ \vspace{2mm}\small CS444 (Spring 2017)}
+\author{Authored by \\ Nathan Shepherd, Stephen Krueger, Joshua Matteson }
+\date{November 14, 2016}
+\begin{document}
+% Title page
+\maketitle
+\newpage
+
+
+\section{Command Log}
+\begin{itemize}
+\item cd linux-yocto-3.14
+\item git checkout v3.14.26
+\item source /scratch/opt/e/scratch/opt/en environment-setup-i586-poky-linux environment-setup-i586-poky-linux.csh
+\item source /scratch/opt/environment-setup-i586-poky-linux.csh
+\item cp /scatch/spring2017/files/config-3.14.26-yocto-qemu.config
+\item make menuconfig
+\item make -j4 all
+\item cd.. 
+\item gdb
+\item cp /scratch/spring2017/files/bzImage-qemux86.bin .
+\item /scratch/spring2017/files/core-image-lsb-sdk-qemux86.ext3 .
+\item qemu-system-i386 -gdb tcp::5632 -S -nographic -kernel bzImage-qemux86.bin -drive file=core-image-lsb-sdk-qemux86.ext3,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug".
+\item (gdb) continue
+\item uname -a
+\item qemu-system-i386 -gdb tcp::5632 -S -nographic -kernel bzImage-qemux86.bin -drive file=core-image-lsb-sdk-qemux86.ext3,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug".
+\item reboot
+\end{itemize}
+\section{Command Line Flags}
+\textbf{An explanation of each and every flag in the listed qemu command-line}
+
+qemu-system-i386 -gdb tcp::???? -S -nographic -kernel linux-yocto-3.14/arch/x86/boot/bzImage -drive file=core-image-lsb-sdk-qemux86.ext3,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug"
+
+
+\begin{itemize}  
+\item -s :  sets the size of the stack, default is 524288
+\item -gdb : sets debugger to gdb
+\item -nographic : disables graphical output and makes QEMU a command line application 
+\item -kernel : specifies the use of bzImage as the kernel image 
+\item -drive : defines a new drive, in this case  the drive is file=core-image-lsb-sdk-qemux86.ext3
+\item -enable-kvm : enables KVM virtualization support
+\item -net : specifies the user network stack, in this case none
+\item -usb : enable usb driver
+\item -localtime : sets the time to localtime
+\item --no-reboot : disables reboot, exits instead
+\item --append : enables command line arguments to the kernel
+\end{itemize}
+
+
+
+\section{Questions}
+
+\subsection{What do you think the main point of this assignment is?}
+The main purpose of this assignment is twofold.
+First it refreshed our memory when it came to using pthreads and the skills we learned in the first operating systems class. The second purpose of this assignment was to get us to start thinking in parallel when implementing a solution to a problem.    
+
+\subsection{How did you personally approach the problem?}
+We approached the problem by breaking it down into different smaller steps. We first got the random number generator going. Next we created the threads. Then we implemented a buffer. We then defined the behavior of both the producer and the consumer threads before we implemented each. Finally we implemented the task of maintaining  
+\subsection{How did you ensure your solution was correct?}
+First, in order to test the random number generator we ran the program on our local machines and os-class to make sure that both implementations, one using rrand and the other using mersene twister, were correct. We also tested the extremes like adding to the buffer when  it was already full to test blocking. 
+
+\subsection{What did you learn?}
+Going over pthreads again helped jog our memory. We also learned how to implement small portions of assembly language code in our c code. Lastly, we started to learn how to use parallel thinking to solve the problem. 
+
+
+\section{Version Control Log}
+\begin{tabular}{lp{12cm}}
+  \label{tabular:legend:git-log}
+  \textbf{acronym} & \textbf{meaning} \\
+  V & \texttt{version} \\
+  tag & \texttt{git tag} \\
+  MF & Number of \texttt{modified files}. \\
+  AL & Number of \texttt{added lines}. \\
+  DL & Number of \texttt{deleted lines}. \\
+\end{tabular}
+
+\bigskip
+
+\begin{longtable}{|rlllrrr|}
+\hline \multicolumn{1}{|c}{\textbf{V}} & \multicolumn{1}{c}{\textbf{tag}}
+& \multicolumn{1}{c}{\textbf{date}}
+& \multicolumn{1}{c}{\textbf{commit message}} & \multicolumn{1}{c}{\textbf{MF}}
+& \multicolumn{1}{c}{\textbf{AL}} & \multicolumn{1}{c|}{\textbf{DL}} \\ \hline
+\endhead
+
+\hline \multicolumn{7}{|r|}{} \\ \hline
+\endfoot
+
+\hline% \hline
+\endlastfoot
+
+\hline 1 &  & 2017-04-19 & Initial commit & 1 & 2 & 0 \\
+\hline 2 &  & 2017-04-19 & Adding concurrency 1 & 1 & 35 & 0 \\
+\hline 3 &  & 2017-04-20 & Adding todo & 1 & 34 & 0 \\
+\hline 4 &  & 2017-04-20 & Adding mersenne twister & 3 & 192 & 1 \\
+\hline 5 &  & 2017-04-21 & Added thread and mutex, incomplete & 2 & 257 & 11 \\
+\hline 6 &  & 2017-04-21 & Compiles currently, incomplete & 1 & 65 & 49 \\
+\hline 7 &  & 2017-04-21 & Threads just starting to work & 1 & 32 & 7 \\
+\hline 8 &  & 2017-04-21 & Removed extra folder & 1 & 0 & 1 \\
+\hline 9 &  & 2017-04-21 & Threads working, buffer not & 1 & 32 & 19 \\
+\hline 10 &  & 2017-04-21 & Adding globals & 1 & 16 & 9 \\
+\hline 11 &  & 2017-04-21 & added tex files - still need vcl & 4 & 9289 & 0 \\
+\end{longtable}
+
+
+\section{Work Log}
+\begin{itemize}
+\item Thursday 13th - Got started on the Kernel part of the assignment in the recitation.
+\item Wednesday 19th - Met as a group to finish the Kernel part of the assignment. Set up github repo. Started concurrency portion of the assignment - basic outline, brainstorming and commenting.
+\item Thursday 20th - Worked on concurrency problem and started the writeup. 
+\item Friday 21st - Finished concurrency problem and finished the writeup.
+\end{itemize}
+\end{document}
