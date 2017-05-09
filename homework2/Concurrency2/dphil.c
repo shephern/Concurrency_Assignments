@@ -45,9 +45,6 @@ void printForkStatus(){
 
 }
 
-
-
-
 void *din(int n)
    {   
       while(1){
@@ -61,12 +58,14 @@ void *din(int n)
 void start_din(){
    int i;
 
-   for(i=0;i<5;i++)
+   for(i=0;i<5;i++){
       pthread_mutex_init(&forks[i],NULL);
-
-   for(i=0;i<5;i++)
+   }
+   
+   for(i=0;i<5;i++){
       pthread_create(&philosopher[i],NULL,(void *)din,(void *)i);
-
+   }
+    
    for(i=0;i<5;i++){
       pthread_join(philosopher[i],NULL);
    }
