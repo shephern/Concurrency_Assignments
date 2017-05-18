@@ -21,7 +21,7 @@ struct passed_args{
 int size = 0;
 struct node *head;
 
-sem_t deleter_mutex;
+sem_t searcher_count_mutex;
 sem_t searcher_mutex;
 sem_t inserter_mutex;
 sem_t mutex;
@@ -56,8 +56,8 @@ int main(int argc, char **argv)
         head = (struct node *)malloc( sizeof(struct node) );
         head->next = NULL;
 
-        if (sem_init(&deleter_mutex, 0, 1) != 0) {
-                printf("ERROR: Deleter init failed\n");
+        if (sem_init(&searcher_count_mutex, 0, 1) != 0) {
+                printf("ERROR: Searcher init failed\n");
                 exit(EXIT_FAILURE);
         }
         if (sem_init(&searcher_mutex, 0, num_search) != 0) {
@@ -105,7 +105,9 @@ int main(int argc, char **argv)
                                 (void *)&a[index]);
                 index++;
         }
-        
+        while(1 == 1) {
+                index = 1 - 1 + index;
+        } 
         for (long i = 0; i < num_thread; ++i) {
                 pthread_join(threads[i], NULL);
         }
@@ -116,7 +118,7 @@ int main(int argc, char **argv)
 void *inserter(void *passed_arg)
 {
         int val;
-        long sleep_time = 1;
+        long sleep_time = 3;
 
         struct passed_args *a = (struct passed_args*)passed_arg;
         while (1 == 1) {
@@ -146,7 +148,7 @@ void *inserter(void *passed_arg)
                         tmp->next = in;
                 }
                 size++;
-                print_list();
+                //print_list();
 
                 sem_post(&mutex);
                 sem_post(&inserter_mutex);
@@ -159,19 +161,19 @@ void *inserter(void *passed_arg)
 void *searcher(void *passed_arg)
 {
         int val;
-        long sleep_time = 3;
+        long sleep_time = 1;
         struct node *tmp = (struct node *) malloc( 
                         sizeof(struct node) );
 
         struct passed_args *a = (struct passed_args*)passed_arg;
         int found;
         while (1 == 1) {
-                sem_wait(&mutex);
+                sem_wait(&searcher_count_mutex);
                 searchers += 1;
                 if (searchers == 1) {
                         sem_wait(&searcher_mutex);
                 }
-                sem_post(&mutex);
+                sem_post(&searcher_count_mutex);
 
                 found = 0;
                 val = rand()%200;
@@ -193,12 +195,12 @@ void *searcher(void *passed_arg)
                 }
                 pthread_mutex_unlock(&print_mutex);
 
-                sem_wait(&mutex);
+                sem_wait(&searcher_count_mutex);
                 searchers -= 1;
                 if (searchers == 0) {
                         sem_post(&searcher_mutex);
                 }
-                sem_post(&mutex);
+                sem_post(&searcher_count_mutex);
 
                 sleep(sleep_time);
         }    
@@ -209,7 +211,7 @@ void *searcher(void *passed_arg)
 void *deleter(void *passed_arg)
 {
         int val;
-        long sleep_time = 1;
+        long sleep_time = 3;
 
         struct passed_args *a = (struct passed_args*)passed_arg;
         while (1 == 1) {
@@ -224,7 +226,7 @@ void *deleter(void *passed_arg)
                 
                 pthread_mutex_lock(&print_mutex);
                 printf("Deleter %d deleting %d index item\n",  
-                        a->pid, val);
+                        a->pid, del_index);
                 pthread_mutex_unlock(&print_mutex);
 
                 tmp = (struct node *) head;
@@ -241,6 +243,7 @@ void *deleter(void *passed_arg)
                                         size--;
                                 }
                         } else {
+                                index++;
                                 prev = tmp;
                                 tmp = tmp->next;
                         }
@@ -258,15 +261,17 @@ void print_list()
 {
         struct node *tmp = (struct node *) head->next;
         pthread_mutex_lock(&print_mutex);
+        printf("------------------------\n");
         if (size == 0) {
-                printf("List is empty, size: 0");
+                printf("[]");
         } else {
-                printf("List is [");
+                printf("[");
                 for (int i = 0; i < size - 1; ++i) {
                         printf("%d, ", tmp->value);
                         tmp = tmp->next;
                 }
                 printf("%d] size: %d\n", tmp->value, size);
         }
+        printf("------------------------\n");
         pthread_mutex_unlock(&print_mutex);
 }
