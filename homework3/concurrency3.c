@@ -55,7 +55,6 @@ int main(int argc, char **argv)
         srand(time(NULL));
         head = (struct node *)malloc( sizeof(struct node) );
         head->next = NULL;
-        head->value = -1;
 
         if (sem_init(&deleter_mutex, 0, 1) != 0) {
                 printf("ERROR: Deleter init failed\n");
@@ -118,10 +117,6 @@ void *inserter(void *passed_arg)
 {
         int val;
         long sleep_time = 1;
-        struct node *tmp = (struct node *) malloc( 
-                        sizeof(struct node) );
-        struct node *in = (struct node *) malloc(
-                        sizeof(struct node) );
 
         struct passed_args *a = (struct passed_args*)passed_arg;
         while (1 == 1) {
@@ -134,15 +129,22 @@ void *inserter(void *passed_arg)
                 printf("Inserter %d inserted %d value item\n",  
                         a->pid, val);
                 pthread_mutex_unlock(&print_mutex);
+                
+                struct node *in = (struct node *) malloc(
+                        sizeof(struct node) );
 
-                tmp = (struct node *) head;
+                struct node *tmp = (struct node *) head;
+                
                 in->next = NULL;
                 in->value = val;
-
-                while(tmp->next != NULL){
-                        tmp = tmp->next;
+                if (head == NULL) {
+                        head = in;     
+                } else {
+                        while (tmp->next != NULL)
+                                tmp = tmp->next;
+                
+                        tmp->next = in;
                 }
-                tmp->next = in;
                 size++;
                 print_list();
 
@@ -151,7 +153,6 @@ void *inserter(void *passed_arg)
                 
                 sleep(sleep_time);
         }    
-        free(tmp);        
         return NULL;
 }
 
@@ -255,14 +256,15 @@ void *deleter(void *passed_arg)
 
 void print_list()
 {
-        struct node *tmp = (struct node *) head;
+        struct node *tmp = (struct node *) head->next;
         pthread_mutex_lock(&print_mutex);
         if (size == 0) {
                 printf("List is empty, size: 0");
         } else {
                 printf("List is [");
-                while (tmp->next != NULL) {
+                for (int i = 0; i < size - 1; ++i) {
                         printf("%d, ", tmp->value);
+                        tmp = tmp->next;
                 }
                 printf("%d] size: %d\n", tmp->value, size);
         }
