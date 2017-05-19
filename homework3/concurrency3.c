@@ -6,8 +6,6 @@
 #include <semaphore.h>
 #include <time.h>
 
-pthread_mutex_t buffer_mutex;
-pthread_mutex_t print_mutex;
 
 struct node{
         struct node *next;
@@ -21,10 +19,10 @@ struct passed_args{
 int size = 0;
 struct node *head;
 
-sem_t searcher_count_mutex;
-sem_t searcher_mutex;
-sem_t inserter_mutex;
-sem_t mutex;
+pthread_mutex_t searcher_count_mutex;
+pthread_mutex_t searcher_mutex;
+pthread_mutex_t inserter_mutex;
+pthread_mutex_t print_mutex;
 long int searchers = 0;
 
 void *searcher(void *passed_arg);
@@ -55,21 +53,18 @@ int main(int argc, char **argv)
         srand(time(NULL));
         head = (struct node *)malloc( sizeof(struct node) );
         head->next = NULL;
+        head->value = -1;
 
-        if (sem_init(&searcher_count_mutex, 0, 1) != 0) {
+        if (pthread_mutex_init(&searcher_count_mutex, NULL) != 0) {
                 printf("ERROR: Searcher init failed\n");
                 exit(EXIT_FAILURE);
         }
-        if (sem_init(&searcher_mutex, 0, num_search) != 0) {
+        if (pthread_mutex_init(&searcher_mutex, NULL) != 0) {
                 printf("ERROR: Searcher init failed\n");
                 exit(EXIT_FAILURE);
         }
-        if (sem_init(&inserter_mutex, 0, 1) != 0) {
+        if (pthread_mutex_init(&inserter_mutex, NULL) != 0) {
                 printf("ERROR: Inserter init failed\n");
-                exit(EXIT_FAILURE);
-        }
-        if (sem_init(&mutex, 0, 1) != 0) {
-                printf("ERROR: Mutex init failed\n");
                 exit(EXIT_FAILURE);
         }
         if (pthread_mutex_init(&print_mutex, NULL) != 0) {
@@ -118,17 +113,20 @@ int main(int argc, char **argv)
 void *inserter(void *passed_arg)
 {
         int val;
-        long sleep_time = 3;
+        long sleep_time = 1;
 
         struct passed_args *a = (struct passed_args*)passed_arg;
         while (1 == 1) {
-                sem_wait(&inserter_mutex);
-                sem_wait(&mutex);
+                pthread_mutex_lock(&print_mutex);
+                printf("Inserter is blocked\n");
+                pthread_mutex_unlock(&print_mutex);
+
+                pthread_mutex_lock(&inserter_mutex);
                 
                 val = rand()%200;
                 
                 pthread_mutex_lock(&print_mutex);
-                printf("Inserter %d inserted %d value item\n",  
+                printf("Inserter %ld inserted %d value item\n",  
                         a->pid, val);
                 pthread_mutex_unlock(&print_mutex);
                 
@@ -139,19 +137,17 @@ void *inserter(void *passed_arg)
                 
                 in->next = NULL;
                 in->value = val;
-                if (head == NULL) {
-                        head = in;     
+                if (head->next == NULL) {
+                        head->next = in;     
                 } else {
                         while (tmp->next != NULL)
                                 tmp = tmp->next;
-                
                         tmp->next = in;
                 }
                 size++;
-                //print_list();
+                print_list();
 
-                sem_post(&mutex);
-                sem_post(&inserter_mutex);
+                pthread_mutex_unlock(&inserter_mutex);
                 
                 sleep(sleep_time);
         }    
@@ -168,39 +164,42 @@ void *searcher(void *passed_arg)
         struct passed_args *a = (struct passed_args*)passed_arg;
         int found;
         while (1 == 1) {
-                sem_wait(&searcher_count_mutex);
+                pthread_mutex_lock(&print_mutex);
+                printf("Searcher is blocked\n");
+                pthread_mutex_unlock(&print_mutex);
+                pthread_mutex_lock(&searcher_count_mutex);
                 searchers += 1;
                 if (searchers == 1) {
-                        sem_wait(&searcher_mutex);
+                        pthread_mutex_lock(&searcher_mutex);
                 }
-                sem_post(&searcher_count_mutex);
+                pthread_mutex_unlock(&searcher_count_mutex);
 
                 found = 0;
                 val = rand()%200;
                 
-                tmp = (struct node *) head;
+                tmp = (struct node *) head->next;
 
-                while (tmp->next != NULL){
-                        if (tmp->value == val)
+                while (tmp != NULL){
+                        if ((val - 5 <= tmp->value)&&(tmp->value <= val+5))
                                 found = 1;
                 }
 
                 pthread_mutex_lock(&print_mutex);
                 if (found == 1) {
-                        printf("Searcher %d found %d value item\n",
-                                a->pid, val);
+                        printf("Searcher %ld found item (%d < value < %d)\n"
+                                ,a->pid, val-6, val+6);
                 } else {
-                        printf("Searcher %d did not find %d value item\n",  
+                        printf("Searcher %ld did not find %d value item\n",
                                 a->pid, val);
                 }
                 pthread_mutex_unlock(&print_mutex);
 
-                sem_wait(&searcher_count_mutex);
+                pthread_mutex_lock(&searcher_count_mutex);
                 searchers -= 1;
                 if (searchers == 0) {
-                        sem_post(&searcher_mutex);
+                        pthread_mutex_unlock(&searcher_mutex);
                 }
-                sem_post(&searcher_count_mutex);
+                pthread_mutex_unlock(&searcher_count_mutex);
 
                 sleep(sleep_time);
         }    
@@ -210,37 +209,49 @@ void *searcher(void *passed_arg)
 
 void *deleter(void *passed_arg)
 {
-        int val;
-        long sleep_time = 3;
+        long sleep_time = 2;
 
         struct passed_args *a = (struct passed_args*)passed_arg;
         while (1 == 1) {
-                sem_wait(&searcher_mutex);
-                sem_wait(&inserter_mutex);
+                pthread_mutex_lock(&print_mutex);
+                printf("Deleter is blocked\n");
+                pthread_mutex_unlock(&print_mutex);
 
+                pthread_mutex_unlock(&searcher_mutex);
+                pthread_mutex_unlock(&inserter_mutex);
                 struct node *tmp;
                 struct node *prev;
                 int index = 0;
 
-                int del_index = (size == 0)? 0 : rand()%size;
+                int del_index = (size == 0) ? 0 : rand()%size;
                 
                 pthread_mutex_lock(&print_mutex);
-                printf("Deleter %d deleting %d index item\n",  
-                        a->pid, del_index);
+                if (size == 0) {
+                        printf("Deleter not deleting, list empty\n");
+                } else {
+                        printf("Deleter %ld deleting %d index item\n",  
+                                a->pid, del_index);
+                }
                 pthread_mutex_unlock(&print_mutex);
 
-                tmp = (struct node *) head;
+                tmp = (struct node *) head->next;
                 prev = tmp;
-                while(tmp->next != NULL){
+                while(tmp != NULL){
                         if (index == del_index) {
                                 if (del_index == 0) {
-                                        head = tmp->next;
-                                        free(tmp);
-                                        size--;
+                                        head->next = tmp->next;
+                                        if (tmp != NULL){
+                                                tmp = NULL;
+                                                //free(tmp);
+                                                size--;
+                                        }
                                 } else {
                                         prev->next = tmp->next;
-                                        free(tmp);
-                                        size--;
+                                        if (tmp != NULL){
+                                                //free(tmp);
+                                                tmp = NULL;
+                                                size--;
+                                        }
                                 }
                         } else {
                                 index++;
@@ -248,9 +259,10 @@ void *deleter(void *passed_arg)
                                 tmp = tmp->next;
                         }
                 }
+                print_list();
 
-                sem_post(&inserter_mutex);
-                sem_post(&searcher_mutex);
+                pthread_mutex_unlock(&inserter_mutex);
+                pthread_mutex_unlock(&searcher_mutex);
                 
                 sleep(sleep_time);
         }    
@@ -261,9 +273,9 @@ void print_list()
 {
         struct node *tmp = (struct node *) head->next;
         pthread_mutex_lock(&print_mutex);
-        printf("------------------------\n");
-        if (size == 0) {
-                printf("[]");
+        printf("List is: \n");
+        if (tmp == NULL) {
+                printf("[]\n");
         } else {
                 printf("[");
                 for (int i = 0; i < size - 1; ++i) {
