@@ -1,0 +1,107 @@
+\documentclass[letterpaper,10pt,titlepage, onecolumn, compsoc]{IEEEtran}
+
+\usepackage{graphicx}                                        
+\usepackage{amssymb}                                         
+\usepackage{amsmath}                                         
+\usepackage{amsthm}                                          
+\usepackage{longtable}
+
+\usepackage{alltt}                                           
+\usepackage{float}
+\usepackage{color}
+\usepackage{url}
+
+\usepackage{balance}
+\usepackage[TABBOTCAP, tight]{subfigure}
+\usepackage{enumitem}
+\usepackage{pstricks, pst-node}
+
+\usepackage{geometry}
+\geometry{textheight=8.5in, textwidth=6in}
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\usepackage{hyperref}
+\usepackage{geometry}
+
+\title{Assignment 3 \\The Kernel Crypto API \\ \vspace{2mm}\small CS444 (Spring 2017)}
+\author{Authored by \\ Nathan Shepherd, Stephen Krueger, Joshua Matteson }
+\begin{document}
+% Title page
+\maketitle
+\newpage
+
+
+\section{Plans}
+
+Before we start on implementing our crypto solution we wanted to get the unencrypted standard block driver working first. We will need to do research on the Linux Crypto API that is supposedly documented poorly. Finding working examples to help us to get an understanding would be incredibly helpful. We will then get a well rounded understanding of the RAM Disk and how to implement a module. 
+
+
+
+\section{Questions}
+
+\subsection{What do you think the main point of this assignment is?}
+The main point of this assignment was to further our understanding of the linux kernel by implementing a poorly documented API. It also taught us how to load modules and how linux handles drivers. 
+
+\subsection{How did you personally approach the problem?}
+We first had to figure out how to make a block device. Then we had to figure out how to load the block device onto the kernel. After we were able to get it running as a module we implemented the cyrpto API. 
+
+
+\subsection{How did you ensure your solution was correct?}
+We ran the kernel and loaded the module to make sure that it was working correctly. To test the crypto parts we used a hardcoded key to ensure that it was encrypting/decrypting correctly. 
+
+
+
+\subsection{What did you learn?}
+We learned about how frustrating using a poorly documented API can be. As we said above it also required us to learn about block drivers and handling modules. It also taught us how to encrypt/decrypt with the crypto API. 
+
+
+
+\section{Version Control Log}
+\begin{tabular}{lp{12cm}}
+  \label{tabular:legend:git-log}
+  \textbf{acronym} & \textbf{meaning} \\
+  V & \texttt{version} \\
+  tag & \texttt{git tag} \\
+  MF & Number of \texttt{modified files}. \\
+  AL & Number of \texttt{added lines}. \\
+  DL & Number of \texttt{deleted lines}. \\
+\end{tabular}
+
+\bigskip
+
+\begin{longtable}{|rlllrrr|}
+\hline \multicolumn{1}{|c}{\textbf{V}} & \multicolumn{1}{c}{\textbf{tag}}
+& \multicolumn{1}{c}{\textbf{date}}
+& \multicolumn{1}{c}{\textbf{commit message}} & \multicolumn{1}{c}{\textbf{MF}}
+& \multicolumn{1}{c}{\textbf{AL}} & \multicolumn{1}{c|}{\textbf{DL}} \\ \hline
+\endhead
+
+\hline \multicolumn{7}{|r|}{} \\ \hline
+\endfoot
+
+\hline% \hline
+\endlastfoot
+
+\hline 1 &  & 2017-04-20 & Logs and kernel hw1 & 45934 & 18287987 & 0 \\
+\hline 2 &  & 2017-04-27 & Added a gitignore & 1 & 1 & 0 \\
+\hline 3 &  & 2017-04-27 & Added qemu\_command script & 1 & 3 & 0 \\
+\hline 4 &  & 2017-04-27 & Added sstf file & 2 & 125 & 0 \\
+\hline 5 &  & 2017-05-03 & assign1 folder, starting on assign2 & 5 & 6054 & 2 \\
+\hline 6 &  & 2017-05-03 & Current linux working & 1 & 0 & 1 \\
+\hline 7 &  & 2017-05-03 & Bash runner now uses correct scheduler & 4 & 39 & 39 \\
+\hline 8 &  & 2017-05-07 & Implemented C-LOOK & 1 & 84 & 20 \\
+\end{longtable}
+
+ 
+\section{Work Log}
+\begin{itemize}
+
+\item Thursday 17th - Did research on the concurrency part of the assignment. 
+\item Thursday 18th - Finished the concurrency part of the assignment in class and started to research the kernel. 
+\item Sunday 21st - Started to work on the kernel assignment, met and got the block driver written and a good idea of how to implement the crypto code. 
+\item Monday 22nd -  We were able to get the kernel loaded and run it as a module. 
+\end{itemize}
+
+\end{document}
