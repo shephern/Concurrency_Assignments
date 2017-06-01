@@ -35,7 +35,11 @@ int main( int argc, char *argv[] )  {
    if (argc == 3) {
         chairs = atoi(argv[1]);
         custs = atoi(argv[2]);
+   } else if (argc != 1) {
+           printf("USAGE: con4b chairs customers\n");
+           exit(EXIT_FAILURE);
    }
+
    int custsArr[custs];
    pthread_t cid[custs];
    int i;
